@@ -15,7 +15,7 @@ void die(const char *s)
 {
     write(STDOUT_FILENO, "\x1b[2j", 4);
     write(STDOUT_FILENO, "\x1b[H", 3);
-    
+
     perror(s);
     exit(1);
 }
@@ -78,9 +78,21 @@ void editorProcessKeypress()
 }
 
 // output
+void editorDrawRows() 
+{
+    int y;
+    for (y = 0; y < 24; y++) {
+        write(STDOUT_FILENO, ">\r\n", 3);
+    }
+}
+
 void editorRefreshScreen() 
 {
     write(STDOUT_FILENO, "\x1b[2j", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
+
+    editorDrawRows();
+
     write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
