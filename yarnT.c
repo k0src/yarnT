@@ -5,6 +5,10 @@
 #include <ctype.h>
 #include <errno.h>
 
+// defines
+
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 struct termios orig_termios; // store original terminal attributes
 
 void die(const char *s)
@@ -25,7 +29,7 @@ void enableRawMode()
     // get original terminal attributes
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
         die("tcgetattr");
-        
+
     // save terminal attributes
     tcgetattr(STDIN_FILENO, &orig_termios);
 
@@ -47,23 +51,35 @@ void enableRawMode()
         die("tcsetattr");
 }
 
+// read keyboard input
+char editorReadKey() 
+{
+    int nread;
+    char c;
+
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+        if (nread == -1 && errno != EAGAIN)
+            die("read");
+    }
+    return c;
+}
+
+void editorProcessKeypress() 
+{
+    char c = editorReadKey();
+
+    switch (c) 
+    {
+        case CTRL_KEY('q'): exit(0); break;
+    }
+}
+
 int main() 
 {
     enableRawMode();
 
-    char c = '\0';
     while (1) {
-        char c = '\0';
-        if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
-            die("read");
-
-        if (iscntrl(c)) { 
-            printf("%d\r\n", c);
-        }
-        else {
-            printf("%d ('%c')\r\n", c, c);
-        }
-        if (c == 'q') break; 
+        editorProcessKeypress();
     }
     return 0;
 }
