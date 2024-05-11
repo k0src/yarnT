@@ -13,6 +13,9 @@ struct termios orig_termios; // store original terminal attributes
 
 void die(const char *s)
 {
+    write(STDOUT_FILENO, "\x1b[2j", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
+    
     perror(s);
     exit(1);
 }
@@ -78,6 +81,7 @@ void editorProcessKeypress()
 void editorRefreshScreen() 
 {
     write(STDOUT_FILENO, "\x1b[2j", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
 int main() 
