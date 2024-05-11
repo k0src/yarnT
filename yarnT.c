@@ -5,36 +5,42 @@
 #include <ctype.h>
 #include <errno.h>
 
-struct termios orig_termios;
+struct termios orig_termios; // store original terminal attributes
 
-void die(const char *s) 
+void die(const char *s)
 {
     perror(s);
     exit(1);
 }
 
-void disableRawMode() 
+void disableRawMode()
 {
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
         die("tcsetattr");
 }
 
-void enableRawMode() 
+// enable raw mode for terminal input
+void enableRawMode()
 {
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
-        die("tcsetattr");
-
+    // get original terminal attributes
+    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+        die("tcgetattr");
+        
+    // save terminal attributes
     tcgetattr(STDIN_FILENO, &orig_termios);
+
     atexit(disableRawMode);
 
-    struct termios raw = orig_termios;
+    struct termios raw = orig_termios; 
 
-    tcgetattr(STDIN_FILENO, &raw);
-    raw.c_lflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    raw.c_lflag &= ~(OPOST);
-    raw.c_lflag |= (CS8);
-    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-    raw.c_cc[VMIN] = 0;
+    tcgetattr(STDIN_FILENO, &raw); 
+
+    // modify terminal attributes for raw mode
+    raw.c_lflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON); 
+    raw.c_lflag &= ~(OPOST); 
+    raw.c_lflag |= (CS8); 
+    raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG); 
+    raw.c_cc[VMIN] = 0; 
     raw.c_cc[VTIME] = 1;
 
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
@@ -51,13 +57,13 @@ int main()
         if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
             die("read");
 
-        if (iscntrl(c)) {
+        if (iscntrl(c)) { 
             printf("%d\r\n", c);
         }
         else {
             printf("%d ('%c')\r\n", c, c);
         }
-        if (c == 'q') break;
+        if (c == 'q') break; 
     }
     return 0;
 }
