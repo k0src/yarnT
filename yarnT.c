@@ -74,11 +74,18 @@ void editorProcessKeypress()
     }
 }
 
+// output
+void editorRefreshScreen() 
+{
+    write(STDOUT_FILENO, "\x1b[2j", 4);
+}
+
 int main() 
 {
     enableRawMode();
 
     while (1) {
+        editorRefreshScreen();
         editorProcessKeypress();
     }
     return 0;
