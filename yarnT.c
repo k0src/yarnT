@@ -4,13 +4,15 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 // defines
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 struct editorConfig 
 {
-    // store original terminal attributes
+    int screen_rows;
+    int screen_cols;
     struct termios orig_termios; 
 };
 
@@ -72,6 +74,19 @@ char editorReadKey()
     return c;
 }
 
+int getWindowSize(int* rows, int* cols)
+{
+    struct winsize ws;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0)
+        return -1;
+    else {
+        *rows = ws.ws_row;
+        *cols = ws.ws_col;
+        return 0;
+    }
+}
+
 void editorProcessKeypress() 
 {
     char c = editorReadKey();
@@ -86,8 +101,8 @@ void editorProcessKeypress()
 void editorDrawRows() 
 {
     int y;
-    for (y = 0; y < 24; y++) {
-        write(STDOUT_FILENO, ">\r\n", 3);
+    for (y = 0; y < E.screen_rows; y++) {
+        write(STDOUT_FILENO, "@\r\n", 3);
     }
 }
 
@@ -101,9 +116,15 @@ void editorRefreshScreen()
     write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
+void initEditor() {
+    if (getWindowSize(&E.screen_rows, &E.screen_cols) == -1)
+        die("getWindowSize");
+}
+
 int main() 
 {
     enableRawMode();
+    initEditor();
 
     while (1) {
         editorRefreshScreen();
