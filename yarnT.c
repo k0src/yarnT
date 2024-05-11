@@ -6,10 +6,15 @@
 #include <errno.h>
 
 // defines
-
 #define CTRL_KEY(k) ((k) & 0x1f)
 
-struct termios orig_termios; // store original terminal attributes
+struct editorConfig 
+{
+    // store original terminal attributes
+    struct termios orig_termios; 
+};
+
+struct editorConfig E;
 
 void die(const char *s)
 {
@@ -22,7 +27,7 @@ void die(const char *s)
 
 void disableRawMode()
 {
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
         die("tcsetattr");
 }
 
@@ -30,15 +35,15 @@ void disableRawMode()
 void enableRawMode()
 {
     // get original terminal attributes
-    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+    if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
         die("tcgetattr");
 
     // save terminal attributes
-    tcgetattr(STDIN_FILENO, &orig_termios);
+    tcgetattr(STDIN_FILENO, &E.orig_termios);
 
     atexit(disableRawMode);
 
-    struct termios raw = orig_termios; 
+    struct termios raw = E.orig_termios; 
 
     tcgetattr(STDIN_FILENO, &raw); 
 
@@ -50,7 +55,7 @@ void enableRawMode()
     raw.c_cc[VMIN] = 0; 
     raw.c_cc[VTIME] = 1;
 
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
         die("tcsetattr");
 }
 
