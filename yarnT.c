@@ -174,17 +174,25 @@ void editorMoveCursor(int key)
     switch (key) 
     {
         case ARROW_UP:
-            E.c_y--;
-            break;
+            if (E.c_y != 0) {
+                E.c_y--;
+                break;
+            }
         case ARROW_LEFT:
-            E.c_x--;
-            break;
+            if (E.c_x != 0) {
+                E.c_x--;
+                break;
+            }
         case ARROW_DOWN:
-            E.c_y++;
-            break;
+            if (E.c_y != E.screen_rows - 1) {
+                E.c_y++;
+                break;
+            }
         case ARROW_RIGHT:
-            E.c_x++;
-            break;
+            if (E.c_x != E.screen_cols - 1) {
+                E.c_x++;
+                break;
+            }
     }
 }
 
