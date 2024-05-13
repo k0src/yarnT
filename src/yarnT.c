@@ -39,6 +39,7 @@ struct editorConfig
 {
     int c_x, c_y;
     int rowoffset;
+    int coloffset;
     int screen_rows;
     int screen_cols;
     int numrows;
@@ -249,6 +250,8 @@ void abFree(struct abuf *ab) {
 
 void editorMoveCursor(int key) 
 {
+    erow* row = (E.c_y >= E.numrows) ? NULL : &E.row[E.c_y];
+
     switch (key) 
     {
         case ARROW_UP:
@@ -259,18 +262,30 @@ void editorMoveCursor(int key)
         case ARROW_LEFT:
             if (E.c_x != 0) {
                 E.c_x--;
-                break;
+            }
+            else if (E.c_y > 0) {
+                E.c_y--;
+                E.c_x = E.row[E.c_y].size;
             }
         case ARROW_DOWN:
-            if (E.c_y != E.screen_rows - 1) {
+            if (E.c_y < E.numrows) {
                 E.c_y++;
                 break;
             }
         case ARROW_RIGHT:
-            if (E.c_x != E.screen_cols - 1) {
+            if (row && E.c_x < row->size) {
                 E.c_x++;
-                break;
             }
+            else if (row && E.c_x == row->size) {
+                E.c_y++;
+                E.c_x = 0;
+            }
+    }
+
+    row = (E.c_y >= E.numrows) ? NULL : &E.row[E.c_y];
+    int rowlen = row ? row->size : 0;
+    if (E.c_x > rowlen) {
+        E.c_x = rowlen;
     }
 }
 
@@ -312,6 +327,18 @@ void editorProcessKeypress()
     }
 }
 
+void editorScroll() 
+{
+    if (E.c_y < E.rowoffset)
+        E.rowoffset = E.c_y;
+    if (E.c_y >= E.rowoffset + E.screen_rows)
+        E.rowoffset = E.c_y - E.screen_rows + 1;
+    if (E.c_x < E.coloffset)
+        E.coloffset = E.c_x;
+    if (E.c_x >= E.coloffset + E.screen_cols)
+        E.coloffset = E.c_x - E.screen_cols + 1;
+}
+
 // output
 void editorDrawRows(struct abuf *ab) 
 {
@@ -321,7 +348,7 @@ void editorDrawRows(struct abuf *ab)
         if (y >= E.numrows) {
             if (E.numrows == 0 && y == E.screen_rows / 3) {
                 char welcome[80];
-                int welcomelen = snprintf(welcome, sizeof(welcome), "YarnT editor -- version %s", YARNT_VERSION);
+                int welcomelen = snprintf(welcome, sizeof(welcome), "yarnT editor :) -- version %s", YARNT_VERSION);
                 if (welcomelen > E.screen_cols) welcomelen = E.screen_cols;
                 int padding = (E.screen_cols - welcomelen) / 2;
                 if (padding) {
@@ -336,10 +363,12 @@ void editorDrawRows(struct abuf *ab)
             }
         }
         else {
-            int len = E.row[y].size;
+            int len = E.row[y].size - E.coloffset;
+            if (len < 0)
+                len = 0;
             if (len > E.screen_cols)
                 len = E.screen_cols;
-            abAppend(ab, E.row[y].chars, len);
+            abAppend(ab, &E.row[y].chars[E.coloffset], len);
         }
 
         abAppend(ab, "\x1b[K", 3);
@@ -348,8 +377,10 @@ void editorDrawRows(struct abuf *ab)
     }
 }
 
-void editorRefreshScreen() 
+void editorRefreshScreen()
 {
+    editorScroll();
+
     struct abuf ab = ABUF_INIT;
 
     abAppend(&ab, "\x1b[?25l", 6);
@@ -358,7 +389,7 @@ void editorRefreshScreen()
     editorDrawRows(&ab);
 
     char buf[32];
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.c_y)+1, (E.c_x)+1);
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.c_y - E.rowoffset) + 1, (E.c_x - E.coloffset) + 1);
     abAppend(&ab, buf, strlen(buf));
 
     abAppend(&ab, "\x1b[?25h", 6);
@@ -371,6 +402,7 @@ void initEditor() {
     E.c_x = 0;
     E.c_y = 0;
     E.rowoffset = 0;
+    E.coloffset = 0;
 
     E.numrows = 0;
     E.row = NULL;
