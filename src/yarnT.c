@@ -6,9 +6,11 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <string.h>
+#include <sys/types.h>
 
 // defines
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define YARNT_VERSION "0.0.1"
 
 enum editorKey 
 {
@@ -23,11 +25,19 @@ enum editorKey
     PAGE_DOWN
 };
 
+typedef struct erow 
+{
+    int size;
+    char *chars;
+} erow;
+
 struct editorConfig 
 {
     int c_x, c_y;
     int screen_rows;
     int screen_cols;
+    int numrows;
+    erow row;
     struct termios orig_termios; 
 };
 
@@ -176,6 +186,19 @@ int getWindowSize(int* rows, int* cols)
     }
 }
 
+// file i/o
+void editorOpen() 
+{
+    char* line = "Hello, world!";
+    ssize_t linelen = strlen(line);
+
+    E.row.size = linelen;
+    E.row.chars = malloc(linelen + 1);
+    memcpy(E.row.chars, line, linelen);
+    E.row.chars[linelen] = '\0';
+    E.numrows = 1;
+}
+
 struct abuf 
 {
     char* b;
@@ -269,26 +292,35 @@ void editorDrawRows(struct abuf *ab)
 {
     int y;
     
-    for (y = 0; y < E.screen_rows; y++) {if (y == E.screen_rows / 3) {
-        char welcome[80];
-        int welcomelen = snprintf(welcome, sizeof(welcome), "welcome to yarnT :) -- version 0.0.1");
-        
-        if (welcomelen > E.screen_cols)
-            welcomelen = E.screen_cols;
+    for (y = 0; y < E.screen_rows; y++) {
+        if (y >= E.numrows) {
+            if (y == E.screen_rows / 3) {
+                char welcome[80];
+                int welcomelen = snprintf(welcome, sizeof(welcome), "welcome to yarnT :) -- version %s", YARNT_VERSION);
             
-        int padding = (E.screen_cols - welcomelen) / 2;
-        
-        if (padding) {
+                if (welcomelen > E.screen_cols)
+                    welcomelen = E.screen_cols;
+                
+                int padding = (E.screen_cols - welcomelen) / 2;
+            
+                if (padding) {
+                    abAppend(ab, ">", 1);
+                    padding--;
+                }
+            
+                while (padding--) abAppend(ab, " ", 1);
+                abAppend(ab, welcome, welcomelen);
+        } else {
             abAppend(ab, ">", 1);
-            padding--;
         }
-        
-        while (padding--) abAppend(ab, " ", 1);
-        abAppend(ab, welcome, welcomelen);
     }
     else {
-        abAppend(ab, ">", 1);
+        int len = E.row.size;
+        if (len > E.screen_cols)
+            len = E.screen_cols;
+        abAppend(ab, E.row.chars, len);
     }
+
     abAppend(ab, "\x1b[K", 3);
     if (y < E.screen_rows - 1) {
         abAppend(ab, "\r\n", 2);
@@ -319,6 +351,8 @@ void initEditor() {
     E.c_x = 0;
     E.c_y = 0;
 
+    E.numrows = 0;
+
     if (getWindowSize(&E.screen_rows, &E.screen_cols) == -1)
         die("getWindowSize");
 }
@@ -327,6 +361,7 @@ int main()
 {
     enableRawMode();
     initEditor();
+    editorOpen();
 
     while (1) {
         editorRefreshScreen();
