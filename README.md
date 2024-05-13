@@ -9,6 +9,7 @@
 **Usage:**
 
 - `yarnT <filename>` - Open/Create a file.
+- `Ctrl+W` - Jump to next word.
 - `Ctrl+F` - Find in file.
 - `Ctrl+S` - Save.
 - `Ctrl+Q` - Quit.

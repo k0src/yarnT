@@ -87,7 +87,8 @@ enum KEY_ACTION{
         ENTER = 13,        
         CTRL_Q = 17,       
         CTRL_S = 19,       
-        CTRL_U = 21,       
+        CTRL_U = 21,
+        CTRL_W = 23,       
         ESC = 27,          
         BACKSPACE =  127,  
        
@@ -1088,6 +1089,26 @@ void editorMoveCursor(int key) {
     }
 }
 
+void editorMoveWord(void) {
+    int filerow = E.rowoff + E.cy;
+    int filecol = E.coloff + E.cx;
+    erow *row = (filerow >= E.numrows) ? NULL : &E.row[filerow];
+
+    if (!row) return;
+
+    int current_char = filecol;
+    while (current_char < row->size && !isalnum(row->chars[current_char])) {
+        current_char++;
+    }
+
+    while (current_char < row->size && isalnum(row->chars[current_char])) {
+        current_char++;
+    }
+
+    if (current_char > filecol) {
+        E.cx = current_char - E.coloff;
+    }
+}
 
 #define YARN_QUIT_TIMES 3
 void editorProcessKeypress(int fd) {
@@ -1105,7 +1126,7 @@ void editorProcessKeypress(int fd) {
     case CTRL_Q:       
        
         if (E.dirty && quit_times) {
-            editorSetStatusMessage("WARNING!!! File has unsaved changes. "
+            editorSetStatusMessage("File has unsaved changes. "
                 "Press Ctrl-Q %d more times to quit.", quit_times);
             quit_times--;
             return;
@@ -1146,6 +1167,9 @@ void editorProcessKeypress(int fd) {
     case CTRL_L:
        
         break;
+    case CTRL_W:
+            editorMoveWord();
+            break;
     case ESC:
        
         break;
@@ -1202,7 +1226,7 @@ int main(int argc, char **argv) {
     editorOpen(argv[1]);
     enableRawMode(STDIN_FILENO);
     editorSetStatusMessage(
-        "HELP: Ctrl-S: save file | Ctrl-Q: quit | Ctrl-F: find");
+        "HELP: Ctrl-S: save file | Ctrl-Q: quit | Ctrl-F: find | Ctrl-W: move word | Arrow keys: move | Page Up/Down: move | Home/End: move | Del: delete char | Backspace: delete char | ESC: quit search");
     while(1) {
         editorRefreshScreen();
         editorProcessKeypress(STDIN_FILENO);
