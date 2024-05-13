@@ -1,0 +1,14 @@
+**yarnT** is a tiny terminal based text editor.
+
+**Features:**
+
+- Syntax Highlighting
+- File I/O
+- Search Functionality
+
+**Usage:**
+
+- `yarnT <filename>` - Open/Create a file.
+- `Ctrl+F` - Find in file.
+- `Ctrl+S` - Save.
+- `Ctrl+Q` - Quit.
