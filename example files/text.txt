@@ -1,0 +1,6 @@
+This is an example text file for demonstration purposes.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+Fusce sed sem id lorem convallis laoreet nec non libero. Sed interdum, nulla id commodo facilisis, libero urna viverra tellus, vel sodales turpis dolor ut quam. 
+Nullam viverra lacus quis tellus lobortis, a porta dui cursus. Phasellus vel consectetur neque. Ut consequat suscipit nisi, non interdum nisi hendrerit sed. 
+Nam luctus erat non nulla tincidunt malesuada. Cras in eros neque. Proin vitae risus ut odio pharetra volutpat. Nulla tincidunt purus velit, vel lacinia purus lacinia nec.

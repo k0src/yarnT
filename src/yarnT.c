@@ -187,16 +187,28 @@ int getWindowSize(int* rows, int* cols)
 }
 
 // file i/o
-void editorOpen() 
+void editorOpen(char* filename) 
 {
-    char* line = "Hello, world!";
-    ssize_t linelen = strlen(line);
+    FILE* fp = fopen(filename, "r");
+    if (!fp)
+        die("fopen");
 
-    E.row.size = linelen;
-    E.row.chars = malloc(linelen + 1);
-    memcpy(E.row.chars, line, linelen);
-    E.row.chars[linelen] = '\0';
-    E.numrows = 1;
+    char* line = NULL;
+    size_t linelen = 0;
+    ssize_t len;
+
+    linelen = getline(&line, &linelen, fp);
+    if (linelen != -1) {
+        while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
+            linelen--;
+        E.row.size = linelen;
+        E.row.chars = malloc(linelen + 1);
+        memcpy(E.row.chars, line, linelen);
+        E.row.chars[linelen] = '\0';
+        E.numrows = 1;
+    }
+    free(line);
+    fclose(fp);
 }
 
 struct abuf 
@@ -357,11 +369,12 @@ void initEditor() {
         die("getWindowSize");
 }
 
-int main() 
+int main(int argc, char* argv[]) 
 {
     enableRawMode();
     initEditor();
-    editorOpen();
+    if (argc >= 2)
+        editorOpen(argv[1]);
 
     while (1) {
         editorRefreshScreen();
