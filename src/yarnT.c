@@ -8,6 +8,10 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 // defines
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define YARNT_VERSION "0.0.1"
@@ -306,7 +310,7 @@ void editorDrawRows(struct abuf *ab)
     
     for (y = 0; y < E.screen_rows; y++) {
         if (y >= E.numrows) {
-            if (y == E.screen_rows / 3) {
+            if (E.numrows == 0 && y == E.screen_rows / 3) {
                 char welcome[80];
                 int welcomelen = snprintf(welcome, sizeof(welcome), "welcome to yarnT :) -- version %s", YARNT_VERSION);
             
