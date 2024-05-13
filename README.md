@@ -12,3 +12,5 @@
 - `Ctrl+F` - Find in file.
 - `Ctrl+S` - Save.
 - `Ctrl+Q` - Quit.
+
+yarnT is created following [this](https://viewsourcecode.org/snaptoken/kilo/) tutorial.
