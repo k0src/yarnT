@@ -38,6 +38,7 @@ typedef struct erow
 struct editorConfig 
 {
     int c_x, c_y;
+    int rowoffset;
     int screen_rows;
     int screen_cols;
     int numrows;
@@ -320,36 +321,31 @@ void editorDrawRows(struct abuf *ab)
         if (y >= E.numrows) {
             if (E.numrows == 0 && y == E.screen_rows / 3) {
                 char welcome[80];
-                int welcomelen = snprintf(welcome, sizeof(welcome), "welcome to yarnT :) -- version %s", YARNT_VERSION);
-            
-                if (welcomelen > E.screen_cols)
-                    welcomelen = E.screen_cols;
-                
+                int welcomelen = snprintf(welcome, sizeof(welcome), "YarnT editor -- version %s", YARNT_VERSION);
+                if (welcomelen > E.screen_cols) welcomelen = E.screen_cols;
                 int padding = (E.screen_cols - welcomelen) / 2;
-            
                 if (padding) {
                     abAppend(ab, ">", 1);
                     padding--;
                 }
-            
                 while (padding--) abAppend(ab, " ", 1);
                 abAppend(ab, welcome, welcomelen);
-        } else {
-            abAppend(ab, ">", 1);
+            }
+            else {
+                abAppend(ab, ">", 1);
+            }
         }
-    }
-    else {
-        int len = E.row[y].size;
-        if (len > E.screen_cols)
-            len = E.screen_cols;
-        abAppend(ab, E.row[y].chars, len);
-    }
+        else {
+            int len = E.row[y].size;
+            if (len > E.screen_cols)
+                len = E.screen_cols;
+            abAppend(ab, E.row[y].chars, len);
+        }
 
-    abAppend(ab, "\x1b[K", 3);
-    if (y < E.screen_rows - 1) {
-        abAppend(ab, "\r\n", 2);
+        abAppend(ab, "\x1b[K", 3);
+        if (y < E.screen_rows - 1)
+            abAppend(ab, "\r\n", 2);
     }
-  }
 }
 
 void editorRefreshScreen() 
@@ -374,6 +370,7 @@ void editorRefreshScreen()
 void initEditor() {
     E.c_x = 0;
     E.c_y = 0;
+    E.rowoffset = 0;
 
     E.numrows = 0;
     E.row = NULL;
